@@ -1,6 +1,6 @@
-// Minimal service worker: caches the page so the app installs and opens offline.
-const CACHE = 'folder-test-v1';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg'];
+// Caches the app so it opens offline. Network first, so updates appear right away when online.
+const CACHE = 'checklists-v1';
+const FILES = ['./', 'index.html', 'app.js', 'md.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)));
@@ -14,8 +14,8 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Network first, cache as fallback — so updates show up immediately while testing.
 self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
   e.respondWith(
     fetch(e.request)
       .then((r) => {
@@ -23,6 +23,6 @@ self.addEventListener('fetch', (e) => {
         caches.open(CACHE).then((c) => c.put(e.request, copy));
         return r;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });

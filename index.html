@@ -2,160 +2,86 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Folder access test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checklists</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1f2933">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1d1f" media="(prefers-color-scheme: dark)">
 <style>
-  :root { color-scheme: light dark; --ok:#2e7d32; --bad:#c62828; --muted:#6b7280; }
-  body { font: 16px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 40rem; padding: 1rem; }
-  h1 { font-size: 1.3rem; margin: .2rem 0 1rem; }
-  h2 { font-size: 1rem; margin: 1.5rem 0 .5rem; }
-  ul { list-style: none; padding: 0; margin: 0; }
-  li { padding: .25rem 0; border-bottom: 1px solid #8883; }
-  .ok { color: var(--ok); font-weight: 600; }
-  .bad { color: var(--bad); font-weight: 600; }
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f6f2; --fg: #1d1f21; --muted: #6f7378; --line: #e3e1da; --card: #ffffff;
+    --accent: #2f7d5b; --on-accent: #ffffff; --danger: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1d1f; --fg: #ecebe7; --muted: #9a9ea3; --line: #2e3134; --card: #232628; --accent: #5fbf8f; --on-accent: #10261b; --danger: #ef7d74; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  body { font: 17px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  .screen { max-width: 40rem; margin: 0 auto; padding: max(1rem, env(safe-area-inset-top)) 1rem 5rem; }
+  header { display: flex; align-items: center; gap: .5rem; margin: .25rem 0 1rem; min-height: 2.75rem; }
+  h1 { font-size: 1.5rem; margin: 0; flex: 1; overflow-wrap: anywhere; }
+  p { margin: .5rem 0 1rem; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
   .muted { color: var(--muted); font-size: .9rem; }
-  button { font: inherit; padding: .7rem 1rem; margin: .3rem .3rem .3rem 0; border-radius: .5rem;
-           border: 1px solid #8886; background: #8881; cursor: pointer; width: 100%; text-align: left; }
-  button:disabled { opacity: .4; }
-  pre { white-space: pre-wrap; background: #8881; padding: .7rem; border-radius: .5rem; font-size: .85rem; min-height: 3rem; }
+  .primary { display: block; width: 100%; padding: .9rem; border-radius: .75rem; background: var(--accent); color: var(--on-accent); font-weight: 600; margin-top: 1rem; }
+  .link { color: var(--accent); padding: .5rem 0; font-size: .9rem; }
+  .back { font-size: 2rem; line-height: 1; padding: 0 .6rem 0 .1rem; color: var(--muted); }
+
+  /* add forms */
+  .add { display: flex; gap: .5rem; margin: .5rem 0 1rem; }
+  .add input { flex: 1; min-width: 0; font: inherit; color: inherit; padding: .75rem .9rem; border-radius: .75rem;
+               border: 1px solid var(--line); background: var(--card); outline: none; }
+  .add input:focus { border-color: var(--accent); }
+  .add-btn { width: 3rem; border-radius: .75rem; background: var(--accent); color: var(--on-accent); font-size: 1.5rem; line-height: 1; }
+
+  /* list of checklists */
+  .lists, .items { list-style: none; margin: 0; padding: 0; }
+  .lists li + li { margin-top: .5rem; }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: .35rem .75rem; padding: .85rem 1rem; border-radius: .75rem; background: var(--card); border: 1px solid var(--line); }
+  .row-title { font-weight: 600; overflow-wrap: anywhere; }
+  .row-meta { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+  .row .bar { grid-column: 1 / -1; }
+  .bar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+  .progress { display: flex; align-items: center; gap: .75rem; margin: -.25rem 0 1rem; }
+  .progress .bar { flex: 1; }
+  .progress small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  footer { margin-top: 2rem; }
+
+  /* items */
+  .items li { display: flex; align-items: center; gap: .25rem; border-bottom: 1px solid var(--line); min-height: 3rem; }
+  .check { display: flex; align-items: center; justify-content: center; width: 2.75rem; height: 3rem; flex: none; cursor: pointer; }
+  .check input { width: 1.35rem; height: 1.35rem; accent-color: var(--accent); margin: 0; cursor: pointer; }
+  .text { flex: 1; padding: .6rem 0; overflow-wrap: anywhere; cursor: text; }
+  .items.done .text { color: var(--muted); text-decoration: line-through; }
+  .edit { flex: 1; min-width: 0; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--accent); border-radius: .5rem; padding: .45rem .6rem; outline: none; }
+  .del { width: 2.75rem; height: 3rem; font-size: 1.5rem; color: var(--danger); flex: none; }
+  .done-section { margin-top: 1.25rem; }
+  .done-toggle { color: var(--muted); font-size: .95rem; padding: .5rem 0; }
+
+  /* menu */
+  .menu { position: relative; }
+  .menu summary { list-style: none; font-size: 1.6rem; line-height: 1; padding: .2rem .6rem; color: var(--muted); cursor: pointer; border-radius: .5rem; }
+  .menu summary::-webkit-details-marker { display: none; }
+  .menu[open] summary { background: var(--card); }
+  .menu-items { position: absolute; right: 0; top: 2.6rem; z-index: 10; min-width: 13rem; background: var(--card); border: 1px solid var(--line);
+                border-radius: .75rem; box-shadow: 0 8px 24px #0002; overflow: hidden; }
+  .menu-items button { display: block; width: 100%; text-align: left; padding: .8rem 1rem; }
+  .menu-items button + button { border-top: 1px solid var(--line); }
+  .menu-items .danger { color: var(--danger); }
+
+  #toast { position: fixed; left: 50%; bottom: max(1.25rem, env(safe-area-inset-bottom)); transform: translate(-50%, 1rem); opacity: 0;
+           background: var(--fg); color: var(--bg); padding: .6rem 1rem; border-radius: .6rem; font-size: .9rem; transition: .25s; pointer-events: none; max-width: 90vw; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
 </head>
 <body>
-<h1>Folder access test</h1>
-<p class="muted">Checks whether this browser lets a web app read and write files in a real folder (e.g. a Syncthing folder). Nothing leaves your device.</p>
-
-<h2>1 · What the browser offers</h2>
-<ul id="features"></ul>
-
-<h2>2 · Try it</h2>
-<button id="pick">📁 Pick a folder and write a test file</button>
-<button id="reuse">🔁 Reuse the saved folder (after reloading the page)</button>
-<button id="download">⬇️ Fallback: download a Markdown file</button>
-
-<h2>3 · Log</h2>
-<pre id="log"></pre>
-<button id="copy">📋 Copy log</button>
-
-<script>
-const $ = (id) => document.getElementById(id);
-const logEl = $('log');
-function log(msg, cls) {
-  const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  logEl.textContent += line + '\n';
-}
-
-// ---- 1. Feature detection ----
-const standalone = matchMedia('(display-mode: standalone)').matches;
-const features = [
-  ['showDirectoryPicker (pick a folder)', 'showDirectoryPicker' in window],
-  ['showSaveFilePicker (save a file)', 'showSaveFilePicker' in window],
-  ['showOpenFilePicker (open a file)', 'showOpenFilePicker' in window],
-  ['Private browser storage (OPFS)', !!(navigator.storage && navigator.storage.getDirectory)],
-  ['Running as installed app', standalone],
-];
-for (const [name, ok] of features) {
-  const li = document.createElement('li');
-  li.innerHTML = `<span class="${ok ? 'ok' : 'bad'}">${ok ? '✓' : '✗'}</span> ${name}`;
-  $('features').appendChild(li);
-}
-log(`User agent: ${navigator.userAgent}`);
-log(`Mode: ${standalone ? 'installed app' : 'browser tab'}`);
-log(`Features: ` + features.map(([n, ok]) => `${n.split(' ')[0]}=${ok ? 'yes' : 'no'}`).join(', '));
-if (!('showDirectoryPicker' in window)) $('pick').disabled = $('reuse').disabled = true;
-
-// ---- Tiny IndexedDB store for the folder handle ----
-function idb() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open('folder-test', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('kv');
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-}
-async function kvSet(k, v) {
-  const db = await idb();
-  return new Promise((res, rej) => {
-    const tx = db.transaction('kv', 'readwrite');
-    tx.objectStore('kv').put(v, k);
-    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-  });
-}
-async function kvGet(k) {
-  const db = await idb();
-  return new Promise((res, rej) => {
-    const r = db.transaction('kv').objectStore('kv').get(k);
-    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-  });
-}
-
-// ---- 2. Write, list, read back ----
-async function exercise(dir) {
-  const name = `pwa-test-${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
-  const text = `# Test note\n\nWritten by the folder test at ${new Date().toString()}\nMode: ${standalone ? 'installed app' : 'browser tab'}\n`;
-  const fh = await dir.getFileHandle(name, { create: true });
-  const w = await fh.createWritable();
-  await w.write(text);
-  await w.close();
-  log(`✓ Wrote ${name}`);
-
-  const back = await (await fh.getFile()).text();
-  log(back === text ? '✓ Read it back, content matches' : '✗ Read back, but content differs');
-
-  const names = [];
-  for await (const [n, h] of dir.entries()) names.push(h.kind === 'directory' ? n + '/' : n);
-  log(`✓ Folder "${dir.name}" contains ${names.length} item(s): ${names.slice(0, 15).join(', ')}${names.length > 15 ? ' …' : ''}`);
-}
-
-$('pick').onclick = async () => {
-  try {
-    const dir = await showDirectoryPicker({ mode: 'readwrite', id: 'notes' });
-    log(`✓ Picked folder "${dir.name}"`);
-    await exercise(dir);
-    try { await kvSet('dir', dir); log('✓ Saved folder handle for later'); }
-    catch (e) { log(`✗ Could not save handle: ${e.name}: ${e.message}`); }
-  } catch (e) {
-    log(`✗ ${e.name}: ${e.message}`);
-  }
-};
-
-$('reuse').onclick = async () => {
-  try {
-    const dir = await kvGet('dir');
-    if (!dir) { log('✗ No saved folder yet — use "Pick a folder" first, then reload.'); return; }
-    let perm = await dir.queryPermission({ mode: 'readwrite' });
-    log(`Permission on reload: ${perm}`);
-    if (perm !== 'granted') {
-      perm = await dir.requestPermission({ mode: 'readwrite' });
-      log(`Permission after asking: ${perm}`);
-    }
-    if (perm === 'granted') await exercise(dir);
-  } catch (e) {
-    log(`✗ ${e.name}: ${e.message}`);
-  }
-};
-
-$('download').onclick = () => {
-  const text = `# Exported note\n\nDownloaded at ${new Date().toString()}\n`;
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
-  a.download = 'exported-note.md';
-  a.click();
-  log('Triggered download of exported-note.md — check your Downloads folder.');
-};
-
-$('copy').onclick = async () => {
-  try { await navigator.clipboard.writeText(logEl.textContent); log('✓ Log copied'); }
-  catch (e) { log(`✗ Copy failed: ${e.message} — select the text manually.`); }
-};
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(
-    () => log('✓ Service worker registered (app can be installed)'),
-    (e) => log(`✗ Service worker failed: ${e.message}`)
-  );
-}
-</script>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<script type="module" src="app.js"></script>
 </body>
 </html>
